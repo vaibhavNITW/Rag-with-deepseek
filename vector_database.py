@@ -47,7 +47,16 @@ def get_embeddings_model(ollama_model_name):
     embeddings = OllamaEmbeddings(model=ollama_model_name)
     return embeddings
 
-#step 4: Create Vector Store (FAISS)
 FAISS_DB_PATH = "vectorstore/db_faiss"
-faiss_db=FAISS.from_documents(text_chunks, get_embeddings_model(ollama_model_name))
-faiss_db.save_local(FAISS_DB_PATH)
+# Load faiss_db from disk for import in other modules
+faiss_db = FAISS.load_local(FAISS_DB_PATH, get_embeddings_model(ollama_model_name), allow_dangerous_deserialization=True)
+
+# Only run this code when executing this file directly
+if __name__ == "__main__":
+    file_path = 'universal_decl.pdf'
+    documents = load_pdf(file_path)
+    print(len(documents))
+    text_chunks = create_chunks(documents)
+    print("chunks count: ", len(text_chunks))
+    faiss_db = FAISS.from_documents(text_chunks, get_embeddings_model(ollama_model_name))
+    faiss_db.save_local(FAISS_DB_PATH)
