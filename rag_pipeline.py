@@ -1,44 +1,41 @@
 from langchain_groq import ChatGroq
 from vector_database import faiss_db
 from langchain_core.prompts import ChatPromptTemplate
+
+
+# Ensure .env is loaded so GROQ_API_KEY is available
 from dotenv import load_dotenv
 load_dotenv()
 
-# step 1 : setup LLM (Use Deepseek - R1 model with Groq)
-# load_dotenv
+#Step1: Setup LLM (Use DeepSeek R1 with Groq)
+llm_model=ChatGroq(model="deepseek-r1-distill-llama-70b")
 
-llm_model = ChatGroq(model= "deepseek-r1-distill-llama-70b")
+#Step2: Retrieve Docs
 
-#step2: Retrieve Docs
-
-def faiss_db_similarity_search(query):
+def retrieve_docs(query):
     return faiss_db.similarity_search(query)
-
-def retireve_docs(query):
-    return faiss_db_similarity_search(query)
 
 def get_context(documents):
     context = "\n\n".join([doc.page_content for doc in documents])
     return context
 
-#step 3: ANSWER QUESTION
+#Step3: Answer Question
 
 custom_prompt_template = """
-use the pieces of information provided in the context to answer user's question.
-If you don't know the answer, just say that you don't know, don't try to make up an answer.
-dont provide any additional information other than the answer.
-Question: {question}
-Context: {context}
-Anaswer:
+Use the pieces of information provided in the context to answer user's question.
+If you dont know the answer, just say that you dont know, dont try to make up an answer. 
+Dont provide anything out of the given context
+Question: {question} 
+Context: {context} 
+Answer:
 """
 
 def answer_query(documents, model, query):
     context = get_context(documents)
     prompt = ChatPromptTemplate.from_template(custom_prompt_template)
     chain = prompt | model
-    response = chain.invoke({"question": query, "context": context})
-    return response
+    return chain.invoke({"question": query, "context": context})
 
-#question = "if a government forbids the right to assemble peacefully which articles are violated and why?"
-#retireve_docs=retireve_docs(question)
-#print("Vaibhav's Chatbox : ",answer_query(documents=retireve_docs, model=llm_model, query=question))
+#question="If a government forbids the right to assemble peacefully which articles are violated and why?"
+#retrieved_docs=retrieve_docs(question)
+#print("AI Lawyer: ",answer_query(documents=retrieved_docs, model=llm_model, query=question))
